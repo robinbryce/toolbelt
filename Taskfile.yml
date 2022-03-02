@@ -35,10 +35,15 @@ tasks:
         SKAFFOLD_DEFAULT_REPO=${SKAFFOLD_DEFAULT_REPO}
         EOF
 
-  build:
-    desc: 'build the images'
+  build-protoc:
+    desc: 'build the protoc image'
     cmds:
       - |
         skaffold build \
           ${PROFILE:+-p $PROFILE} \
-          ${TAG:+-t $TAG}
+          -t protoc-latest
+
+  build:
+    desc: 'build all the tool images'
+    cmds:
+      - task: build-protoc
