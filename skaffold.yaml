@@ -1,0 +1,26 @@
+# To learn more about the skaffold.yaml schema visit
+# https://skaffold.dev/docs/references/yaml/
+apiVersion: skaffold/v2beta26
+kind: Config
+build:
+  tagPolicy:
+    gitCommit:
+      variant: AbbrevCommitSha
+
+  local:
+    push: false
+    concurrency: 8
+    useBuildkit: true
+
+  artifacts:
+    - context: protoc
+      image: protoc
+
+profiles:
+  - name: push
+    # just build the images, don't push (not compatible with deploy)
+    build:
+      local:
+        push: true
+        useBuildkit: true
+        concurrency: 8

@@ -1,0 +1,44 @@
+---
+version: '3'
+silent: true
+
+env:
+  ENV: .local/dev/.env
+  PROFILE: '{{.PROFILE | default ""}}'
+
+dotenv: [".env", '{{.ENV}}/.env', '{{.HOME}}/.env']
+
+tasks:
+
+  bootstrap:
+    desc: |
+      creates the {{.ENV}}/.env file and installs tooling. assumes a debain
+      like system (but uses python or brew where possible). for other platforms
+      run `task bootstrap --sumarize` and use the results to find the right
+      bits.  Note that .env (in the directory containing this Taskfile) is
+      never created or touched in anyway and has the highest precedence
+
+      NOTICE: to re-create {{.ENV}}/.env you MUST delete it first (else it will
+      be re-created with the same values
+
+    cmds:
+      - |
+        mkdir -p {{.ENV}}
+
+        CONTEXT=${CONTEXT:-$(kubectl config current-context)}
+        CLUSTER=$(kubectl config get-contexts ${CONTEXT} --no-headers=true | tr -s ' ' | cut -d ' ' -f3)
+        SKAFFOLD_DEFAULT_REPO=${SKAFFOLD_DEFAULT_REPO:-eu.gcr.io/${CONTEXT}}
+
+        cat <<EOF > {{.ENV}}/.env
+        CONTEXT=${CONTEXT}
+        CLUSTER=${CLUSTER}
+        SKAFFOLD_DEFAULT_REPO=${SKAFFOLD_DEFAULT_REPO}
+        EOF
+
+  build:
+    desc: 'build the images'
+    cmds:
+      - |
+        skaffold build \
+          ${PROFILE:+-p $PROFILE} \
+          ${TAG:+-t $TAG}
