@@ -6,12 +6,14 @@ env:
   ENV: .local/dev/.env
   PROFILE: '{{.PROFILE | default ""}}'
 
-dotenv: [".env", '{{.ENV}}/.env', '{{.HOME}}/.env']
+dotenv: [".env", '{{.ENV}}/.env']
 
 tasks:
 
   bootstrap:
     desc: |
+      setup for local development
+
       creates the {{.ENV}}/.env file and installs tooling. assumes a debain
       like system (but uses python or brew where possible). for other platforms
       run `task bootstrap --sumarize` and use the results to find the right
@@ -35,15 +37,42 @@ tasks:
         SKAFFOLD_DEFAULT_REPO=${SKAFFOLD_DEFAULT_REPO}
         EOF
 
+  build-flatc:
+    desc: 'build the flatc image'
+    cmds:
+      - |
+        [ -z "$PROFILE" ] && PROFILE={{.PROFILE}}
+        [ -z "$TAG" ] && TAG={{.TAG}}
+
+        skaffold build  -b flac \
+          ${PROFILE:+-p $PROFILE} \
+          ${TAG:+-t $TAG}
+    vars:
+      TAG: '{{.TAG | default "main-latest" }}'
+      PROFILE: '{{.PROFILE | default ""}}'
+
   build-protoc:
     desc: 'build the protoc image'
     cmds:
       - |
-        skaffold build \
+        [ -z "$PROFILE" ] && PROFILE={{.PROFILE}}
+        [ -z "$TAG" ] && TAG={{.TAG}}
+
+        skaffold build -b protoc \
           ${PROFILE:+-p $PROFILE} \
-          -t protoc-latest
+          ${TAG:+-t $TAG}
+    vars:
+      TAG: '{{.TAG | default "main-latest" }}'
+      PROFILE: '{{.PROFILE | default ""}}'
+
 
   build:
     desc: 'build all the tool images'
     cmds:
+      - task: build-flatc
       - task: build-protoc
+
+  cd-build:
+    desc: 'build for ci/cd'
+    cmds:
+      - task: build

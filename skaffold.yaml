@@ -15,6 +15,8 @@ build:
   artifacts:
     - context: protoc
       image: protoc
+    - context: flatc
+      image: flatc
 
 profiles:
   - name: push
